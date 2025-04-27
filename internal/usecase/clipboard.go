@@ -6,25 +6,30 @@ import (
 	"time"
 )
 
-type ClipboardUseCase interface {
-	GetHistory(limit int, offset int) ([]entity.ClipboardItem, error)
+type ClipboardUsecase interface {
+	GetByContent(content string) (entity.ClipboardItem, error)
+	UpdateTimestamp(id int) error
 	SaveClipboardContent(content string) error
 	TogglePinItem(id int) error
 }
 
-type clipboardUseCase struct {
+type clipboardUsecase struct {
 	Repo repository.ClipboardRepository
 }
 
-func NewClipboardUseCase(repo repository.ClipboardRepository) ClipboardUseCase {
-	return &clipboardUseCase{Repo: repo}
+func NewClipboardUsecase(repo repository.ClipboardRepository) ClipboardUsecase {
+	return &clipboardUsecase{Repo: repo}
 }
 
-func (uc *clipboardUseCase) GetHistory(limit int, offset int) ([]entity.ClipboardItem, error) {
-	return uc.Repo.GetHistory(limit, offset)
+func (uc *clipboardUsecase) GetByContent(content string) (entity.ClipboardItem, error) {
+	return uc.Repo.GetByContent(content)
 }
 
-func (uc *clipboardUseCase) SaveClipboardContent(content string) error {
+func (uc *clipboardUsecase) UpdateTimestamp(id int) error {
+	return uc.Repo.UpdateTimestamp(id)
+}
+
+func (uc *clipboardUsecase) SaveClipboardContent(content string) error {
 	item := entity.ClipboardItem{
 		Content:   content,
 		Timestamp: time.Now(),
@@ -32,6 +37,6 @@ func (uc *clipboardUseCase) SaveClipboardContent(content string) error {
 	return uc.Repo.Save(item)
 }
 
-func (uc *clipboardUseCase) TogglePinItem(id int) error {
+func (uc *clipboardUsecase) TogglePinItem(id int) error {
 	return uc.Repo.TogglePin(id)
 }

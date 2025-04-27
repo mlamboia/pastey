@@ -10,6 +10,8 @@ type ClipboardRepository interface {
 	Delete(id int) error
 	TogglePin(id int) error
 	GetHistory(limit int, offset int) ([]entity.ClipboardItem, error)
+	GetByContent(content string) (entity.ClipboardItem, error)
+	UpdateTimestamp(id int) error
 }
 
 type clipboardRepository struct {
@@ -53,7 +55,8 @@ func (r *clipboardRepository) GetHistory(limit int, offset int) ([]entity.Clipbo
 		SELECT id, pinned, content, timestamp 
 		FROM clipboard_items 
 		ORDER BY timestamp DESC 
-		LIMIT ? OFFSET ?`, limit, offset)
+		LIMIT ? OFFSET ?
+	`, limit, offset)
 	if err != nil {
 		return nil, err
 	}
@@ -69,4 +72,37 @@ func (r *clipboardRepository) GetHistory(limit int, offset int) ([]entity.Clipbo
 	}
 
 	return items, nil
+}
+
+func (r *clipboardRepository) GetByContent(content string) (entity.ClipboardItem, error) {
+	row := r.db.QueryRow(`
+		SELECT *
+		FROM clipboard_items
+		WHERE content = ?
+		ORDER BY timestamp DESC
+		LIMIT 1
+	`, content)
+
+	var item entity.ClipboardItem
+
+	err := row.Scan(&item.ID, &item.Pinned, &item.Content, &item.Timestamp)
+	if err != nil {
+
+		if err == sql.ErrNoRows {
+			return entity.ClipboardItem{}, nil
+		}
+		return entity.ClipboardItem{}, err
+	}
+
+	return item, nil
+}
+
+func (r *clipboardRepository) UpdateTimestamp(id int) error {
+	_, err := r.db.Exec(`
+		UPDATE clipboard_items
+		SET timestamp = NOW()
+		WHERE id = ?
+	`, id)
+
+	return err
 }

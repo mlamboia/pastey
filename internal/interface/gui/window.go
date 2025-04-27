@@ -1,23 +1,59 @@
 package gui
 
 import (
-	"pastey/internal/interface/controller"
+	"pastey/internal/interface/gui/screen"
+	"pastey/internal/usecase"
 
 	"fyne.io/fyne/v2"
-	"fyne.io/fyne/v2/container"
-	"fyne.io/fyne/v2/widget"
+	"fyne.io/fyne/v2/app"
 )
 
-func SetupMainWindow(app fyne.App) fyne.Window {
-	w := app.NewWindow("Pastey")
-	ctrl := controller.NewShortcutController(w)
-	go ctrl.GlobalShortcutsListener()
+type Screen interface {
+	Build() fyne.CanvasObject
+}
 
-	w.SetContent(container.NewVBox(
-		widget.NewLabel("Press Ctrl + Alt + H to minimize"),
-	))
-	w.Resize(fyne.NewSize(400, 200))
-	w.CenterOnScreen()
+type AppWindow struct {
+	app            fyne.App
+	window         fyne.Window
+	currentScreen  Screen
+	historyUsecase usecase.HistoryUsecase
+}
 
-	return w
+func NewAppWindow(historyUsecase usecase.HistoryUsecase) *AppWindow {
+	app := app.New()
+	window := app.NewWindow("Pastey")
+
+	initialScreen := screen.NewHistoryScreen(historyUsecase)
+
+	return &AppWindow{
+		app:            app,
+		window:         window,
+		currentScreen:  initialScreen,
+		historyUsecase: historyUsecase,
+	}
+}
+
+func (a *AppWindow) Build() {
+	a.ShowHistory()
+	a.window.Resize(fyne.NewSize(600, 400))
+}
+
+func (a *AppWindow) ShowHistory() {
+	a.currentScreen = screen.NewHistoryScreen(a.historyUsecase)
+	a.window.SetContent(a.currentScreen.Build())
+}
+
+func (a *AppWindow) Reload() {
+	fyne.DoAndWait(func() {
+		a.window.SetContent(a.currentScreen.Build())
+	})
+}
+
+// func (a *AppWindow) ShowClipboard() {
+// 	clipboardScreen := screen.NewClipboardWindow(a.historyUsecase)
+// 	a.window.SetContent(clipboardScreen.Build())
+// }
+
+func (a *AppWindow) Run() {
+	a.window.ShowAndRun()
 }
