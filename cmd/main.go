@@ -3,8 +3,11 @@ package main
 import (
 	"pastey/internal/controller"
 	"pastey/internal/infrastructure/db"
+	"pastey/internal/interface/gui"
 	"pastey/internal/usecase"
 	"time"
+
+	"fyne.io/fyne/v2/app"
 )
 
 func main() {
@@ -14,5 +17,8 @@ func main() {
 	}
 
 	clipboardUseCase := &usecase.ClipboardUseCase{Repo: repo}
-	controller.WatchClipboard(clipboardUseCase, 1*time.Second)
+	go controller.WatchClipboard(clipboardUseCase, 1*time.Second)
+	a := app.New()
+	w := gui.SetupMainWindow(a)
+	w.ShowAndRun()
 }
