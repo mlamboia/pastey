@@ -8,7 +8,7 @@ import (
 	"time"
 )
 
-func WatchClipboard(uc *usecase.ClipboardUseCase, interval time.Duration) {
+func WatchClipboard(uc usecase.ClipboardUseCase, interval time.Duration) {
 	var last string
 
 	ticker := time.NewTicker(interval)

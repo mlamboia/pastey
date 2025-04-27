@@ -1,9 +1,11 @@
 package main
 
 import (
+	"fmt"
 	"pastey/internal/controller"
 	"pastey/internal/infrastructure/db"
 	"pastey/internal/interface/gui"
+	"pastey/internal/repository"
 	"pastey/internal/usecase"
 	"time"
 
@@ -11,12 +13,15 @@ import (
 )
 
 func main() {
-	repo, err := db.NewSqliteRepository("clipboard.db")
+	database, err := db.ConnectDB()
 	if err != nil {
 		panic(err)
 	}
+	fmt.Println(database)
 
-	clipboardUseCase := &usecase.ClipboardUseCase{Repo: repo}
+	clipboardRepo := repository.NewClipboardRepository(database)
+	clipboardUseCase := usecase.NewClipboardUseCase(clipboardRepo)
+	// historyUseCase := usecase.NewHistoryUseCase(clipboardRepo)
 	go controller.WatchClipboard(clipboardUseCase, 1*time.Second)
 	a := app.New()
 	w := gui.SetupMainWindow(a)
